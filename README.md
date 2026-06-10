@@ -1,8 +1,8 @@
-# 🛡️ SwiftSafe IT/OT Risk Assessment Engine
+# 🛡️ Cyber IT/OT Risk Assessment Engine
 
 ## 📌 Project Overview
 
-The SwiftSafe IT/OT Risk Assessment Engine is a comprehensive web-based platform designed to manage and assess risks across IT, OT (Operational Technology), and IoT assets. Built with Flask, it features a stunning, modern Obsidian dark-themed dashboard that provides real-time visibility into an organization's security posture. 
+The Cyber IT/OT Risk Assessment Engine is a comprehensive web-based platform designed to manage and assess risks across IT, OT (Operational Technology), and IoT assets. Built with Flask, it features a stunning, modern Obsidian dark-themed dashboard that provides real-time visibility into an organization's security posture. 
 
 The application facilitates complete lifecycle management for assets, risks, vulnerabilities, and mitigations, making it an essential tool for Security Operations Centers (SOC), risk managers, and compliance teams.
 
