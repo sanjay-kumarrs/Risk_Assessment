@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Risks - Cyber Risk Engine{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2><span class="header-icon">⚠️</span> Risk Register</h2>
+        <p class="page-subtitle">Track, assess, and manage organizational risks</p>
+    </div>
+    <a href="{{ url_for('risk_add') }}" class="btn btn-primary">➕ Add Risk</a>
+</div>
+
+<form class="filter-bar" method="GET" action="{{ url_for('risks_list') }}">
+    <input type="text" name="search" class="form-control search-input" placeholder="🔍 Search risks..." value="{{ search }}">
+    <select name="level" class="form-control">
+        <option value="">All Levels</option>
+        {% for l in ['Critical','High','Medium','Low'] %}
+        <option value="{{ l }}" {% if filter_level == l %}selected{% endif %}>{{ l }}</option>
+        {% endfor %}
+    </select>
+    <select name="status" class="form-control">
+        <option value="">All Status</option>
+        {% for s in ['Open','In Progress','Mitigated','Accepted','Closed'] %}
+        <option value="{{ s }}" {% if filter_status == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+    </select>
+    <select name="category" class="form-control">
+        <option value="">All Categories</option>
+        {% for c in ['Cyber Attack','Data Breach','Configuration Error','Insider Threat','Supply Chain','Physical Access','Compliance','Natural Disaster'] %}
+        <option value="{{ c }}" {% if filter_category == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+</form>
+
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>Risk</th><th>Asset</th><th>Category</th><th>L×I</th><th>Score</th><th>Level</th><th>Status</th><th>Owner</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for risk in risks %}
+            <tr>
+                <td><a href="{{ url_for('risk_detail', id=risk.id) }}"><strong>{{ risk.title|truncate(45) }}</strong></a></td>
+                <td><span class="badge badge-{{ risk.asset.asset_type|lower }}">{{ risk.asset.name }}</span></td>
+                <td style="font-size:13px">{{ risk.risk_category }}</td>
+                <td style="font-family:var(--font-mono);color:var(--text-muted)">{{ risk.likelihood }}×{{ risk.impact }}</td>
+                <td style="font-family:var(--font-mono);font-weight:700;font-size:16px">{{ risk.risk_score }}</td>
+                <td><span class="badge badge-{{ risk.risk_level|lower }}">{{ risk.risk_level }}</span></td>
+                <td><span class="badge badge-{{ 'open' if risk.status == 'Open' else ('progress' if risk.status == 'In Progress' else 'closed') }}">{{ risk.status }}</span></td>
+                <td style="color:var(--text-secondary);font-size:13px">{{ risk.risk_owner }}</td>
+                <td>
+                    <a href="{{ url_for('risk_edit', id=risk.id) }}" class="btn btn-secondary btn-sm">✏️</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not risks %}
+            <tr><td colspan="9"><div class="empty-state"><div class="empty-icon">⚠️</div><h3>No risks found</h3></div></td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}{{ asset.name }} - Cyber Risk Engine{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2>
+            <span class="header-icon">🖥️</span> {{ asset.name }}
+            <span class="badge badge-{{ asset.asset_type|lower }}">{{ asset.asset_type }}</span>
+        </h2>
+        <p class="page-subtitle">{{ asset.category }} · {{ asset.location }}</p>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a href="{{ url_for('asset_edit', id=asset.id) }}" class="btn btn-secondary">✏️ Edit</a>
+        <form method="POST" action="{{ url_for('asset_delete', id=asset.id) }}" onsubmit="return confirm('Delete this asset and all its risks?')">
+            <button type="submit" class="btn btn-danger">🗑️ Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header"><span class="card-title">📋 Asset Details</span></div>
+        <div class="detail-grid">
+            <div class="detail-item"><div class="detail-label">Asset Type</div><div class="detail-value"><span class="badge badge-{{ asset.asset_type|lower }}">{{ asset.asset_type }}</span></div></div>
+            <div class="detail-item"><div class="detail-label">Category</div><div class="detail-value">{{ asset.category }}</div></div>
+            <div class="detail-item"><div class="detail-label">Criticality</div><div class="detail-value"><span class="badge badge-{{ asset.criticality|lower }}">{{ asset.criticality }}</span></div></div>
+            <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value"><span class="badge badge-{{ 'closed' if asset.status == 'Active' else 'open' }}">{{ asset.status }}</span></div></div>
+            <div class="detail-item"><div class="detail-label">Owner</div><div class="detail-value">{{ asset.owner }}</div></div>
+            <div class="detail-item"><div class="detail-label">Location</div><div class="detail-value">{{ asset.location or '—' }}</div></div>
+            <div class="detail-item"><div class="detail-label">IP Address</div><div class="detail-value" style="font-family:var(--font-mono)">{{ asset.ip_address or '—' }}</div></div>
+            <div class="detail-item"><div class="detail-label">OS / Firmware</div><div class="detail-value">{{ asset.os_firmware or '—' }}</div></div>
+            <div class="detail-item"><div class="detail-label">Vendor</div><div class="detail-value">{{ asset.vendor or '—' }}</div></div>
+            <div class="detail-item"><div class="detail-label">Registered</div><div class="detail-value" style="font-family:var(--font-mono)">{{ asset.created_at.strftime('%Y-%m-%d') if asset.created_at else '—' }}</div></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span class="card-title">📝 Description</span></div>
+        <p style="color:var(--text-secondary);line-height:1.8">{{ asset.description or 'No description provided.' }}</p>
+
+        <div style="margin-top:24px">
+            <div class="card-header" style="margin-bottom:12px"><span class="card-title">📊 Risk Summary</span></div>
+            <div style="display:flex;gap:16px">
+                <div class="stat-card cyan" style="flex:1;padding:16px">
+                    <div class="stat-value" style="font-size:24px">{{ asset.risk_count }}</div>
+                    <div class="stat-label">Total Risks</div>
+                </div>
+                <div class="stat-card danger" style="flex:1;padding:16px">
+                    <div class="stat-value" style="font-size:24px">{{ asset.open_risk_count }}</div>
+                    <div class="stat-label">Open Risks</div>
+                </div>
+                <div class="stat-card warning" style="flex:1;padding:16px">
+                    <div class="stat-value" style="font-size:24px">{{ asset.vulnerabilities|length }}</div>
+                    <div class="stat-label">Vulnerabilities</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Associated Risks -->
+<div class="card" style="margin-top:24px">
+    <div class="card-header">
+        <span class="card-title">⚠️ Associated Risks ({{ asset.risks|length }})</span>
+        <a href="{{ url_for('risk_add') }}" class="btn btn-primary btn-sm">➕ Add Risk</a>
+    </div>
+    {% if asset.risks %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Risk</th><th>Category</th><th>Score</th><th>Level</th><th>Status</th><th>Treatment</th></tr></thead>
+            <tbody>
+                {% for risk in asset.risks %}
+                <tr>
+                    <td><a href="{{ url_for('risk_detail', id=risk.id) }}"><strong>{{ risk.title|truncate(50) }}</strong></a></td>
+                    <td>{{ risk.risk_category }}</td>
+                    <td style="font-family:var(--font-mono);font-weight:700">{{ risk.risk_score }}</td>
+                    <td><span class="badge badge-{{ risk.risk_level|lower }}">{{ risk.risk_level }}</span></td>
+                    <td><span class="badge badge-{{ 'open' if risk.status == 'Open' else ('progress' if risk.status == 'In Progress' else 'closed') }}">{{ risk.status }}</span></td>
+                    <td>{{ risk.treatment }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><div class="empty-icon">✅</div><h3>No risks identified</h3></div>
+    {% endif %}
+</div>
+
+<!-- Associated Vulnerabilities -->
+<div class="card" style="margin-top:24px">
+    <div class="card-header"><span class="card-title">🔓 Vulnerabilities ({{ asset.vulnerabilities|length }})</span></div>
+    {% if asset.vulnerabilities %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>CVE ID</th><th>Title</th><th>Severity</th><th>CVSS</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for v in asset.vulnerabilities %}
+                <tr>
+                    <td style="font-family:var(--font-mono);font-size:13px">{{ v.cve_id or '—' }}</td>
+                    <td>{{ v.title|truncate(50) }}</td>
+                    <td><span class="badge badge-{{ v.severity|lower }}">{{ v.severity }}</span></td>
+                    <td style="font-family:var(--font-mono);font-weight:700">{{ v.cvss_score }}</td>
+                    <td><span class="badge badge-{{ 'open' if v.status == 'Open' else 'closed' }}">{{ v.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state"><div class="empty-icon">✅</div><h3>No vulnerabilities found</h3></div>
+    {% endif %}
+</div>
+{% endblock %}

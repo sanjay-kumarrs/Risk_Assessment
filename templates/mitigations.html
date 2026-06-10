@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Mitigations - Cyber Risk Engine{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2><span class="header-icon">🔧</span> Mitigation Actions</h2>
+        <p class="page-subtitle">Track risk mitigation plans and their effectiveness</p>
+    </div>
+    <a href="{{ url_for('mitigation_add') }}" class="btn btn-primary">➕ Add Mitigation</a>
+</div>
+
+<div class="table-wrap">
+    <table>
+        <thead><tr><th>Mitigation</th><th>Risk</th><th>Type</th><th>Priority</th><th>Status</th><th>Assigned To</th><th>Effectiveness</th></tr></thead>
+        <tbody>
+            {% for m in mitigations %}
+            <tr>
+                <td><strong>{{ m.title }}</strong></td>
+                <td><a href="{{ url_for('risk_detail', id=m.risk.id) }}">{{ m.risk.title|truncate(35) }}</a></td>
+                <td style="font-size:13px">{{ m.action_type }}</td>
+                <td><span class="badge badge-{{ m.priority|lower }}">{{ m.priority }}</span></td>
+                <td><span class="badge badge-{{ 'closed' if m.status == 'Completed' else ('progress' if m.status == 'In Progress' else 'open') }}">{{ m.status }}</span></td>
+                <td style="color:var(--text-secondary);font-size:13px">{{ m.assigned_to }}</td>
+                <td style="width:150px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <div class="progress-bar" style="flex:1">
+                            <div class="progress-fill {{ 'cyan' if m.effectiveness >= 50 else 'danger' }}" style="width:{{ m.effectiveness }}%"></div>
+                        </div>
+                        <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-muted)">{{ m.effectiveness }}%</span>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not mitigations %}
+            <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔧</div><h3>No mitigations yet</h3></div></td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

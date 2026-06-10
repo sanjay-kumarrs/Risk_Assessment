@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ risk.title }} - Cyber Risk Engine{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2><span class="header-icon">⚠️</span> {{ risk.title|truncate(60) }}</h2>
+        <p class="page-subtitle">{{ risk.risk_category }} · {{ risk.asset.name }}</p>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a href="{{ url_for('risk_edit', id=risk.id) }}" class="btn btn-secondary">✏️ Edit</a>
+        <form method="POST" action="{{ url_for('risk_delete', id=risk.id) }}" onsubmit="return confirm('Delete this risk?')">
+            <button type="submit" class="btn btn-danger">🗑️ Delete</button>
+        </form>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header"><span class="card-title">🎯 Risk Assessment</span></div>
+        <div class="risk-score-display" style="margin-bottom:24px">
+            <div class="score-circle score-{{ risk.risk_level|lower }}">{{ risk.risk_score }}</div>
+            <div>
+                <div style="font-size:20px;font-weight:700">{{ risk.risk_level }} Risk</div>
+                <div style="font-family:var(--font-mono);color:var(--text-muted);font-size:13px">
+                    Likelihood {{ risk.likelihood }} × Impact {{ risk.impact }} = {{ risk.risk_score }}
+                </div>
+            </div>
+        </div>
+        <div class="detail-grid">
+            <div class="detail-item"><div class="detail-label">Category</div><div class="detail-value">{{ risk.risk_category }}</div></div>
+            <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value"><span class="badge badge-{{ 'open' if risk.status == 'Open' else ('progress' if risk.status == 'In Progress' else 'closed') }}">{{ risk.status }}</span></div></div>
+            <div class="detail-item"><div class="detail-label">Treatment</div><div class="detail-value">{{ risk.treatment }}</div></div>
+            <div class="detail-item"><div class="detail-label">Risk Owner</div><div class="detail-value">{{ risk.risk_owner }}</div></div>
+            <div class="detail-item"><div class="detail-label">Threat Source</div><div class="detail-value">{{ risk.threat_source or '—' }}</div></div>
+            <div class="detail-item">
+                <div class="detail-label">Affected CIA</div>
+                <div class="detail-value">
+                    <div class="cia-tags">
+                        {% if 'Confidentiality' in (risk.affected_cia or '') %}<span class="cia-tag cia-c">C</span>{% endif %}
+                        {% if 'Integrity' in (risk.affected_cia or '') %}<span class="cia-tag cia-i">I</span>{% endif %}
+                        {% if 'Availability' in (risk.affected_cia or '') %}<span class="cia-tag cia-a">A</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="detail-item"><div class="detail-label">Asset</div><div class="detail-value"><a href="{{ url_for('asset_detail', id=risk.asset.id) }}">{{ risk.asset.name }}</a></div></div>
+            <div class="detail-item"><div class="detail-label">Identified</div><div class="detail-value" style="font-family:var(--font-mono)">{{ risk.identified_date.strftime('%Y-%m-%d') if risk.identified_date else '—' }}</div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><span class="card-title">📝 Description</span></div>
+        <p style="color:var(--text-secondary);line-height:1.8;margin-bottom:24px">{{ risk.description or 'No description provided.' }}</p>
+
+        <div class="card-header"><span class="card-title">🔧 Mitigations ({{ risk.mitigations|length }})</span></div>
+        {% if risk.mitigations %}
+            {% for mit in risk.mitigations %}
+            <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <strong>{{ mit.title }}</strong>
+                    <span class="badge badge-{{ 'closed' if mit.status == 'Completed' else ('progress' if mit.status == 'In Progress' else 'open') }}">{{ mit.status }}</span>
+                </div>
+                <div style="font-size:13px;color:var(--text-muted);margin-top:4px">{{ mit.action_type }} · {{ mit.assigned_to }}</div>
+                {% if mit.effectiveness > 0 %}
+                <div style="margin-top:8px">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:4px">
+                        <span>Effectiveness</span><span>{{ mit.effectiveness }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill cyan" style="width:{{ mit.effectiveness }}%"></div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="empty-state" style="padding:30px"><div class="empty-icon">🔧</div><h3>No mitigations yet</h3></div>
+        {% endif %}
+        <div style="margin-top:16px">
+            <a href="{{ url_for('mitigation_add') }}" class="btn btn-secondary btn-sm">➕ Add Mitigation</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

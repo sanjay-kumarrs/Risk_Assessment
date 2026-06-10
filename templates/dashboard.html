@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Cyber Risk Engine{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2><span class="header-icon">📊</span> Risk Dashboard</h2>
+        <p class="page-subtitle">Real-time IT/OT risk posture overview</p>
+    </div>
+</div>
+
+<!-- KPI Stats -->
+<div class="stats-grid">
+    <div class="stat-card cyan">
+        <span class="stat-icon">🖥️</span>
+        <div class="stat-value">{{ total_assets }}</div>
+        <div class="stat-label">Total Assets</div>
+        <div class="stat-sub">{{ active_assets }} active</div>
+    </div>
+    <div class="stat-card danger">
+        <span class="stat-icon">⚠️</span>
+        <div class="stat-value">{{ open_risks }}</div>
+        <div class="stat-label">Open Risks</div>
+        <div class="stat-sub">{{ critical_risks }} critical · {{ high_risks }} high</div>
+    </div>
+    <div class="stat-card warning">
+        <span class="stat-icon">🔓</span>
+        <div class="stat-value">{{ open_vulns }}</div>
+        <div class="stat-label">Open Vulnerabilities</div>
+        <div class="stat-sub">of {{ total_vulns }} total</div>
+    </div>
+    <div class="stat-card violet">
+        <span class="stat-icon">📈</span>
+        <div class="stat-value">{{ avg_risk }}</div>
+        <div class="stat-label">Avg Risk Score</div>
+        <div class="stat-sub">out of 25</div>
+    </div>
+    <div class="stat-card success">
+        <span class="stat-icon">🔧</span>
+        <div class="stat-value">{{ mitigation_pct }}%</div>
+        <div class="stat-label">Mitigation Progress</div>
+        <div class="stat-sub">{{ completed_mitigations }}/{{ total_mitigations }} completed</div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">🎯 Risk Level Distribution</span>
+        </div>
+        <div class="chart-container" id="riskLevelChart"></div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">🏷️ Asset Type Breakdown</span>
+        </div>
+        <div class="chart-container" id="assetTypeChart"></div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">📂 Risk Categories</span>
+        </div>
+        <div class="chart-container" id="riskCatChart"></div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">🎯 5×5 Risk Heat Map</span>
+        </div>
+        <div class="chart-container" id="heatmapChart"></div>
+    </div>
+</div>
+
+<!-- Top Risks & Activity -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">🔥 Top Open Risks</span>
+            <a href="{{ url_for('risks_list') }}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        {% for risk in top_risks %}
+        <div class="activity-item">
+            <div class="activity-dot {% if risk.risk_level == 'Critical' %}deleted{% elif risk.risk_level == 'High' %}updated{% else %}created{% endif %}"></div>
+            <div style="flex:1">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <a href="{{ url_for('risk_detail', id=risk.id) }}"><strong>{{ risk.title|truncate(50) }}</strong></a>
+                    <span class="badge badge-{{ risk.risk_level|lower }}">{{ risk.risk_score }} · {{ risk.risk_level }}</span>
+                </div>
+                <div class="activity-time">{{ risk.asset.name }} · {{ risk.risk_category }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">📋 Recent Activity</span>
+            <a href="{{ url_for('audit_log') }}" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        {% for log in recent_logs %}
+        <div class="activity-item">
+            <div class="activity-dot {{ log.action|lower }}"></div>
+            <div>
+                <div class="activity-text">
+                    <strong>{{ log.action }}</strong> {{ log.entity_type }}
+                    {% if log.entity_name %} · {{ log.entity_name|truncate(30) }}{% endif %}
+                </div>
+                <div class="activity-time">{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const chartConfig = { displayModeBar: false, responsive: true };
+const baseFont = { color: '#8b95b0', family: 'Inter, sans-serif' };
+
+// Risk Level Donut
+Plotly.newPlot('riskLevelChart', [{
+    values: [{{ risk_levels['Critical'] }}, {{ risk_levels['High'] }}, {{ risk_levels['Medium'] }}, {{ risk_levels['Low'] }}],
+    labels: ['Critical', 'High', 'Medium', 'Low'],
+    type: 'pie', hole: 0.5,
+    marker: { colors: ['#ff3b5c', '#f97316', '#eab308', '#22c55e'] },
+    textinfo: 'label+value',
+    textposition: 'outside',
+    textfont: { size: 12, color: '#8b95b0' },
+    outsidetextfont: { size: 12, color: '#8b95b0' },
+    pull: [0.02, 0.02, 0.02, 0.02]
+}], {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: baseFont, showlegend: false, height: 300,
+    margin: { t: 30, b: 30, l: 30, r: 30 }
+}, chartConfig);
+
+// Asset Type Bar
+Plotly.newPlot('assetTypeChart', [{
+    x: {{ asset_types.keys()|list|tojson }},
+    y: {{ asset_types.values()|list|tojson }},
+    type: 'bar',
+    marker: {
+        color: {{ asset_types.keys()|list|tojson }}.map(t =>
+            t === 'IT' ? '#06d6a0' : t === 'OT' ? '#7c5cfc' : '#3b82f6')
+    },
+    text: {{ asset_types.values()|list|tojson }},
+    textposition: 'auto',
+    textfont: { color: '#e8ecf4', size: 14, family: 'Inter' }
+}], {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: baseFont, showlegend: false, height: 300,
+    margin: { t: 20, b: 50, l: 50, r: 30 },
+    xaxis: { gridcolor: '#2a3050', tickfont: { size: 12 } },
+    yaxis: { gridcolor: '#2a3050', tickfont: { size: 11 }, dtick: 1 },
+    bargap: 0.4
+}, chartConfig);
+
+// Risk Category Horizontal Bar
+const cats = {{ risk_categories|tojson }};
+const catKeys = Object.keys(cats);
+const catVals = Object.values(cats);
+Plotly.newPlot('riskCatChart', [{
+    y: catKeys, x: catVals, type: 'bar', orientation: 'h',
+    marker: { color: catKeys.map((_, i) => ['#7c5cfc','#06d6a0','#3b82f6','#f97316','#eab308'][i % 5]) },
+    text: catVals, textposition: 'auto',
+    textfont: { color: '#e8ecf4', size: 12, family: 'Inter' }
+}], {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: baseFont, showlegend: false, height: 300,
+    margin: { t: 10, b: 40, l: 150, r: 30 },
+    xaxis: { gridcolor: '#2a3050', tickfont: { size: 11 }, dtick: 1 },
+    yaxis: { gridcolor: '#2a3050', tickfont: { size: 11 }, automargin: true },
+    bargap: 0.35
+}, chartConfig);
+
+// Heatmap
+const matrixData = {{ risk_matrix|tojson }};
+const heatZ = matrixData.reverse();
+Plotly.newPlot('heatmapChart', [{
+    z: heatZ, type: 'heatmap',
+    x: ['Negligible', 'Minor', 'Moderate', 'Major', 'Catastrophic'],
+    y: ['Almost Certain', 'Likely', 'Possible', 'Unlikely', 'Rare'].reverse(),
+    colorscale: [[0, '#1a1f35'], [0.2, '#22c55e44'], [0.4, '#eab30877'], [0.7, '#f97316aa'], [1, '#ff3b5cdd']],
+    showscale: false,
+    text: heatZ.map(r => r.map(v => v > 0 ? v.toString() : '')),
+    texttemplate: '%{text}',
+    textfont: { size: 14, color: '#e8ecf4' },
+    xgap: 3, ygap: 3
+}], {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: baseFont, showlegend: false, height: 300,
+    margin: { t: 10, b: 60, l: 100, r: 20 },
+    xaxis: { title: { text: 'Impact ➜', font: { size: 11 } }, gridcolor: '#2a3050', tickfont: { size: 10 }, side: 'bottom' },
+    yaxis: { title: { text: 'Likelihood ➜', font: { size: 11 } }, gridcolor: '#2a3050', tickfont: { size: 10 } }
+}, chartConfig);
+</script>
+{% endblock %}

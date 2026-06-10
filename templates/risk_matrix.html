@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Risk Matrix - Cyber Risk Engine{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2><span class="header-icon">🎯</span> 5×5 Risk Assessment Matrix</h2>
+        <p class="page-subtitle">Visual heat map of likelihood vs impact for all open risks</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="risk-matrix-container">
+        <table class="risk-matrix">
+            <thead>
+                <tr>
+                    <th colspan="2" rowspan="2"></th>
+                    <th colspan="5" style="text-align:center;font-size:14px;color:var(--text-primary)">IMPACT →</th>
+                </tr>
+                <tr>
+                    <th>1<br>Negligible</th>
+                    <th>2<br>Minor</th>
+                    <th>3<br>Moderate</th>
+                    <th>4<br>Major</th>
+                    <th>5<br>Catastrophic</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set likelihood_labels = ['Almost Certain', 'Likely', 'Possible', 'Unlikely', 'Rare'] %}
+                {% for li in range(5, 0, -1) %}
+                <tr>
+                    {% if li == 5 %}
+                    <th class="axis-label" rowspan="5" style="width:30px">LIKELIHOOD →</th>
+                    {% endif %}
+                    <th>{{ li }}<br>{{ likelihood_labels[5 - li] }}</th>
+                    {% for im in range(1, 6) %}
+                    {% set score = li * im %}
+                    {% set key = li|string + '-' + im|string %}
+                    {% set cell_risks = matrix.get(key, []) %}
+                    {% if score >= 20 %}{% set cell_class = 'matrix-critical' %}
+                    {% elif score >= 12 %}{% set cell_class = 'matrix-high' %}
+                    {% elif score >= 6 %}{% set cell_class = 'matrix-medium' %}
+                    {% else %}{% set cell_class = 'matrix-low' %}{% endif %}
+                    <td class="matrix-cell {{ cell_class }}" title="Score: {{ score }}{% if cell_risks %} | {{ cell_risks|length }} risk(s){% endif %}">
+                        <span class="cell-count">{{ score }}</span>
+                        {% if cell_risks %}
+                        <div style="font-size:11px;margin-top:2px">{{ cell_risks|length }} risk{{ 's' if cell_risks|length > 1 else '' }}</div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Risks by Matrix Position -->
+<div class="card" style="margin-top:24px">
+    <div class="card-header"><span class="card-title">📋 Risks Plotted on Matrix</span></div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Risk</th><th>Asset</th><th>L</th><th>I</th><th>Score</th><th>Level</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for risk in risks|sort(attribute='risk_score', reverse=True) %}
+                <tr>
+                    <td><a href="{{ url_for('risk_detail', id=risk.id) }}"><strong>{{ risk.title|truncate(50) }}</strong></a></td>
+                    <td><span class="badge badge-{{ risk.asset.asset_type|lower }}">{{ risk.asset.name }}</span></td>
+                    <td style="font-family:var(--font-mono)">{{ risk.likelihood }}</td>
+                    <td style="font-family:var(--font-mono)">{{ risk.impact }}</td>
+                    <td style="font-family:var(--font-mono);font-weight:700">{{ risk.risk_score }}</td>
+                    <td><span class="badge badge-{{ risk.risk_level|lower }}">{{ risk.risk_level }}</span></td>
+                    <td><span class="badge badge-{{ 'open' if risk.status == 'Open' else 'progress' }}">{{ risk.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="grid-3" style="margin-top:24px">
+    <div class="card" style="text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">🔴</div>
+        <h3 style="font-size:15px;margin-bottom:4px">Critical (20-25)</h3>
+        <p style="font-size:12px;color:var(--text-muted)">Immediate action required. Escalate to executive management.</p>
+    </div>
+    <div class="card" style="text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">🟠</div>
+        <h3 style="font-size:15px;margin-bottom:4px">High (12-19)</h3>
+        <p style="font-size:12px;color:var(--text-muted)">Priority mitigation needed. Assign risk owner within 48 hours.</p>
+    </div>
+    <div class="card" style="text-align:center">
+        <div style="font-size:32px;margin-bottom:8px">🟡</div>
+        <h3 style="font-size:15px;margin-bottom:4px">Medium (6-11)</h3>
+        <p style="font-size:12px;color:var(--text-muted)">Monitor and plan mitigation. Review quarterly.</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Risk - Cyber Risk Engine{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2><span class="header-icon">{% if action == 'Add' %}➕{% else %}✏️{% endif %}</span> {{ action }} Risk</h2>
+        <p class="page-subtitle">{% if action == 'Add' %}Identify and score a new risk{% else %}Update risk assessment{% endif %}</p>
+    </div>
+    <a href="{{ url_for('risks_list') }}" class="btn btn-secondary">← Back to Risks</a>
+</div>
+
+<div class="card">
+    <form method="POST">
+        <div class="form-group">
+            <label>Risk Title *</label>
+            <input type="text" name="title" class="form-control" required value="{{ risk.title if risk else '' }}" placeholder="e.g. Ransomware attack on critical server">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea name="description" class="form-control" placeholder="Describe the risk scenario...">{{ risk.description if risk else '' }}</textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Associated Asset *</label>
+                <select name="asset_id" class="form-control" required>
+                    {% for asset in assets %}
+                    <option value="{{ asset.id }}" {% if risk and risk.asset_id == asset.id %}selected{% endif %}>[{{ asset.asset_type }}] {{ asset.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Risk Category *</label>
+                <select name="risk_category" class="form-control" required>
+                    {% for c in ['Cyber Attack','Data Breach','Configuration Error','Insider Threat','Supply Chain','Physical Access','Compliance','Natural Disaster'] %}
+                    <option value="{{ c }}" {% if risk and risk.risk_category == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Likelihood (1-5) *</label>
+                <select name="likelihood" class="form-control" required>
+                    <option value="1" {% if risk and risk.likelihood == 1 %}selected{% endif %}>1 - Rare</option>
+                    <option value="2" {% if risk and risk.likelihood == 2 %}selected{% endif %}>2 - Unlikely</option>
+                    <option value="3" {% if risk and risk.likelihood == 3 or not risk %}selected{% endif %}>3 - Possible</option>
+                    <option value="4" {% if risk and risk.likelihood == 4 %}selected{% endif %}>4 - Likely</option>
+                    <option value="5" {% if risk and risk.likelihood == 5 %}selected{% endif %}>5 - Almost Certain</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Impact (1-5) *</label>
+                <select name="impact" class="form-control" required>
+                    <option value="1" {% if risk and risk.impact == 1 %}selected{% endif %}>1 - Negligible</option>
+                    <option value="2" {% if risk and risk.impact == 2 %}selected{% endif %}>2 - Minor</option>
+                    <option value="3" {% if risk and risk.impact == 3 or not risk %}selected{% endif %}>3 - Moderate</option>
+                    <option value="4" {% if risk and risk.impact == 4 %}selected{% endif %}>4 - Major</option>
+                    <option value="5" {% if risk and risk.impact == 5 %}selected{% endif %}>5 - Catastrophic</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Threat Source</label>
+                <input type="text" name="threat_source" class="form-control" value="{{ risk.threat_source if risk else '' }}" placeholder="e.g. External Attacker / APT Group">
+            </div>
+            <div class="form-group">
+                <label>Affected CIA</label>
+                <input type="text" name="affected_cia" class="form-control" value="{{ risk.affected_cia if risk else '' }}" placeholder="e.g. Confidentiality, Integrity">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status" class="form-control">
+                    {% for s in ['Open','In Progress','Mitigated','Accepted','Transferred','Closed'] %}
+                    <option value="{{ s }}" {% if risk and risk.status == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Treatment Strategy</label>
+                <select name="treatment" class="form-control">
+                    {% for t in ['Mitigate','Accept','Transfer','Avoid'] %}
+                    <option value="{{ t }}" {% if risk and risk.treatment == t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Risk Owner</label>
+            <input type="text" name="risk_owner" class="form-control" value="{{ risk.risk_owner if risk else '' }}" placeholder="Person or team responsible">
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">💾 {{ action }} Risk</button>
+            <a href="{{ url_for('risks_list') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

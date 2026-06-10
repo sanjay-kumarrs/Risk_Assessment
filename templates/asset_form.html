@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Asset - Cyber Risk Engine{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2><span class="header-icon">{% if action == 'Add' %}➕{% else %}✏️{% endif %}</span> {{ action }} Asset</h2>
+        <p class="page-subtitle">{% if action == 'Add' %}Register a new IT/OT asset{% else %}Update asset details{% endif %}</p>
+    </div>
+    <a href="{{ url_for('assets_list') }}" class="btn btn-secondary">← Back to Assets</a>
+</div>
+
+<div class="card">
+    <form method="POST">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Asset Name *</label>
+                <input type="text" name="name" class="form-control" required value="{{ asset.name if asset else '' }}" placeholder="e.g. DC-CORE-01">
+            </div>
+            <div class="form-group">
+                <label>Asset Type *</label>
+                <select name="asset_type" class="form-control" required>
+                    <option value="IT" {% if asset and asset.asset_type == 'IT' %}selected{% endif %}>IT</option>
+                    <option value="OT" {% if asset and asset.asset_type == 'OT' %}selected{% endif %}>OT</option>
+                    <option value="IoT" {% if asset and asset.asset_type == 'IoT' %}selected{% endif %}>IoT</option>
+                    <option value="Hybrid" {% if asset and asset.asset_type == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Category *</label>
+                <select name="category" class="form-control" required>
+                    {% for cat in ['Server','Database Server','Web Server','Network Device','Workstation','PLC','HMI','SCADA Server','RTU','DCS','IP Camera','Environmental Sensor','Other'] %}
+                    <option value="{{ cat }}" {% if asset and asset.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Criticality *</label>
+                <select name="criticality" class="form-control" required>
+                    {% for c in ['Critical','High','Medium','Low'] %}
+                    <option value="{{ c }}" {% if asset and asset.criticality == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea name="description" class="form-control" placeholder="Asset description...">{{ asset.description if asset else '' }}</textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Owner</label>
+                <input type="text" name="owner" class="form-control" value="{{ asset.owner if asset else '' }}" placeholder="Team or person responsible">
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" name="location" class="form-control" value="{{ asset.location if asset else '' }}" placeholder="Physical or cloud location">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>IP Address</label>
+                <input type="text" name="ip_address" class="form-control" value="{{ asset.ip_address if asset else '' }}" placeholder="e.g. 10.0.1.10">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status" class="form-control">
+                    {% for s in ['Active','Inactive','Decommissioned'] %}
+                    <option value="{{ s }}" {% if asset and asset.status == s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>OS / Firmware</label>
+                <input type="text" name="os_firmware" class="form-control" value="{{ asset.os_firmware if asset else '' }}" placeholder="e.g. Windows Server 2022">
+            </div>
+            <div class="form-group">
+                <label>Vendor / Model</label>
+                <input type="text" name="vendor" class="form-control" value="{{ asset.vendor if asset else '' }}" placeholder="e.g. Dell PowerEdge R750">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">💾 {{ action }} Asset</button>
+            <a href="{{ url_for('assets_list') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

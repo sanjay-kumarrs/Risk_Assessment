@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Add Mitigation - Cyber Risk Engine{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h2><span class="header-icon">➕</span> Add Mitigation</h2>
+        <p class="page-subtitle">Define a mitigation action for an existing risk</p>
+    </div>
+    <a href="{{ url_for('mitigations_list') }}" class="btn btn-secondary">← Back</a>
+</div>
+<div class="card">
+    <form method="POST">
+        <div class="form-group">
+            <label>Mitigation Title *</label>
+            <input type="text" name="title" class="form-control" required placeholder="e.g. Deploy WAF on web server">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea name="description" class="form-control" placeholder="Describe the mitigation action..."></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Associated Risk *</label>
+                <select name="risk_id" class="form-control" required>
+                    {% for risk in risks %}
+                    <option value="{{ risk.id }}">[{{ risk.risk_level }}] {{ risk.title|truncate(50) }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Action Type</label>
+                <select name="action_type" class="form-control">
+                    {% for t in ['Technical','Administrative','Physical','Procedural'] %}
+                    <option value="{{ t }}">{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Priority</label>
+                <select name="priority" class="form-control">
+                    {% for p in ['Critical','High','Medium','Low'] %}
+                    <option value="{{ p }}" {% if p == 'Medium' %}selected{% endif %}>{{ p }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status" class="form-control">
+                    {% for s in ['Planned','In Progress','Completed','Deferred'] %}
+                    <option value="{{ s }}">{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Assigned To</label>
+                <input type="text" name="assigned_to" class="form-control" placeholder="Person or team">
+            </div>
+            <div class="form-group">
+                <label>Effectiveness (%)</label>
+                <input type="number" name="effectiveness" class="form-control" min="0" max="100" value="0">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">💾 Add Mitigation</button>
+            <a href="{{ url_for('mitigations_list') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

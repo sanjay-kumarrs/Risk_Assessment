@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<<<<<< HEAD
+    <meta name="description" content="Cyber IT/OT Risk Assessment & Asset Management Platform">
+    <title>{% block title %}Cyber Risk Engine{% endblock %}</title>
+=======
+    <meta name="description" content="SwiftSafe IT/OT Risk Assessment & Asset Management Platform">
+    <title>{% block title %}Risk Engine{% endblock %}</title>
+>>>>>>> d85e5f5aabd413bd56a13d2a634f9a14f9349af5
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🛡️</div>
+            <div>
+                <h1>Cyber</h1>
+                <span>Risk Engine</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Overview</div>
+            <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+            <a href="{{ url_for('risk_matrix') }}" class="nav-link {% if request.endpoint == 'risk_matrix' %}active{% endif %}">
+                <span class="nav-icon">🎯</span> Risk Matrix
+            </a>
+
+            <div class="nav-section">Management</div>
+            <a href="{{ url_for('assets_list') }}" class="nav-link {% if 'asset' in request.endpoint %}active{% endif %}">
+                <span class="nav-icon">🖥️</span> Assets
+            </a>
+            <a href="{{ url_for('risks_list') }}" class="nav-link {% if request.endpoint in ('risks_list','risk_detail','risk_add','risk_edit') %}active{% endif %}">
+                <span class="nav-icon">⚠️</span> Risks
+            </a>
+            <a href="{{ url_for('vulnerabilities_list') }}" class="nav-link {% if 'vulnerabilit' in request.endpoint %}active{% endif %}">
+                <span class="nav-icon">🔓</span> Vulnerabilities
+            </a>
+            <a href="{{ url_for('mitigations_list') }}" class="nav-link {% if 'mitigation' in request.endpoint %}active{% endif %}">
+                <span class="nav-icon">🔧</span> Mitigations
+            </a>
+
+            <div class="nav-section">System</div>
+            <a href="{{ url_for('audit_log') }}" class="nav-link {% if request.endpoint == 'audit_log' %}active{% endif %}">
+                <span class="nav-icon">📋</span> Audit Log
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+                {% if category == 'success' %}✅{% elif category == 'warning' %}⚠️{% else %}❌{% endif %}
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
